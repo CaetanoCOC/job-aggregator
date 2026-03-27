@@ -2,6 +2,8 @@
 
 Guia de referência para o Claude Code neste repositório.
 
+**GitHub:** https://github.com/CaetanoCOC/job-aggregator
+
 ---
 
 ## Web App (v3 — Flask)
@@ -119,7 +121,7 @@ app/
 ├── database.py              # Toda a lógica SQLite (4 tabelas)
 ├── ai/
 │   ├── __init__.py
-│   └── gemini.py            # Filtro de relevância via Gemini 1.5 Flash
+│   └── gemini.py            # Filtro de relevância via Gemini 2.0 Flash
 ├── scrapers/
 │   ├── base_scraper.py      # ABC com _get(), _soup(), _vaga_padrao(), _extrair_skills()
 │   ├── linkedin.py          # Guest API (HTML cards, sem auth)
@@ -133,7 +135,7 @@ app/
 └── utils/
     └── helpers.py           # calcular_match_score, normalizar_skills, extrair_softskills…
 
-config.json                  # API keys (gemini_api_key) — não commitar
+config.json                  # API keys (gemini_api_key) — no .gitignore, não commitar
 diagnostico.py               # Script standalone de diagnóstico dos scrapers
 ```
 
