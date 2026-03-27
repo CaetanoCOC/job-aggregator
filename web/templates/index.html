@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Aggregator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ HEADER ══ -->
+<header class="header" id="header">
+  <div class="header-inner">
+
+    <div class="logo">
+      <span class="logo-bolt">⚡</span>
+      <span class="logo-text">Job<span class="logo-accent">Agg</span></span>
+    </div>
+
+    <!-- Tab navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="vagas" onclick="switchTab('vagas')">
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+          <path d="M5 7h6M5 10h4" stroke-linecap="round"/>
+        </svg>
+        Vagas
+      </button>
+      <button class="tab-btn" data-tab="curriculo" onclick="switchTab('curriculo')">
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/>
+          <path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke-linecap="round"/>
+        </svg>
+        Currículo
+      </button>
+    </nav>
+
+    <!-- Search (vagas only) -->
+    <div class="search-wrap" id="headerSearch">
+      <div class="search-box" id="searchBox">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="inputBusca" placeholder="Filtrar vagas salvas…" autocomplete="off" spellcheck="false">
+        <kbd class="kbd">/</kbd>
+      </div>
+    </div>
+
+    <!-- Stats + Status -->
+    <div class="header-right">
+      <div class="stat-chip" id="statTotal">
+        <span class="stat-num" id="numTotal">0</span>
+        <span class="stat-lbl">vagas</span>
+      </div>
+      <div class="stat-chip accent" id="statAplicadas">
+        <span class="stat-num" id="numAplicadas">0</span>
+        <span class="stat-lbl">aplicadas</span>
+      </div>
+      <div class="stat-chip purple" id="statEntrevistas">
+        <span class="stat-num" id="numEntrevistas">0</span>
+        <span class="stat-lbl">entrevistas</span>
+      </div>
+      <div class="status-dot" id="statusDot" title="Aguardando">
+        <span class="dot"></span>
+        <span class="status-label" id="statusLabel">Aguardando</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="progress-bar" id="progressBar"></div>
+</header>
+
+<!-- ════════════════════════════════════════════════════ TOOLBAR ══ -->
+<div class="toolbar" id="toolbar">
+
+  <div class="filter-group">
+    <button class="pill active" data-filter="status" data-value="">Todos</button>
+    <button class="pill" data-filter="status" data-value="nova">Nova</button>
+    <button class="pill" data-filter="status" data-value="favorita">
+      <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M8 1l1.94 3.93L14 5.72l-3 2.93.71 4.13L8 10.65l-3.71 1.13.71-4.13-3-2.93 4.06-.79z"/></svg>
+      Favorita
+    </button>
+    <button class="pill" data-filter="status" data-value="aplicada">Aplicada</button>
+    <button class="pill" data-filter="status" data-value="ignorada">Ignorada</button>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <div class="filter-group compact">
+    <select id="selEstado" class="sel">
+      <option value="">🌎 Estado</option>
+      <option value="SP">SP</option><option value="RJ">RJ</option>
+      <option value="MG">MG</option><option value="RS">RS</option>
+      <option value="PR">PR</option><option value="SC">SC</option>
+      <option value="BA">BA</option><option value="PE">PE</option>
+      <option value="CE">CE</option><option value="GO">GO</option>
+      <option value="DF">DF</option><option value="AM">AM</option>
+      <option value="Remoto">🏠 Remoto</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <button class="pill-sm active" data-filter="modalidade" data-value="">Todas</button>
+    <button class="pill-sm" data-filter="modalidade" data-value="remoto">Remoto</button>
+    <button class="pill-sm" data-filter="modalidade" data-value="hibrido">Híbrido</button>
+    <button class="pill-sm" data-filter="modalidade" data-value="presencial">Presencial</button>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <div class="filter-group">
+    <button class="source-btn active" data-fonte="linkedin">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      LinkedIn
+    </button>
+    <button class="source-btn active" data-fonte="vagas.com">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Vagas.com
+    </button>
+    <button class="source-btn active" data-fonte="infojobs">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      InfoJobs
+    </button>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <!-- AI toggle -->
+  <div class="filter-group">
+    <button class="ai-toggle" id="aiToggle" onclick="toggleAI()" title="Ativar filtro Gemini AI">
+      <span class="ai-icon">✦</span>
+      <span id="aiToggleLabel">Filtro IA</span>
+    </button>
+    <button class="btn-config-ai" id="btnConfigAI" onclick="openAIConfig()" title="Configurar Gemini API Key">
+      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <button class="btn-buscar" id="btnBuscar" onclick="openBuscarModal()">
+    <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+      <path d="M3 10h14M10 3l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Buscar Vagas
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════ VAGAS LAYOUT ══ -->
+<main class="main-layout" id="vagasLayout">
+
+  <section class="feed" id="feed">
+    <div class="feed-empty" id="feedEmpty">
+      <div class="empty-icon">⚡</div>
+      <p class="empty-title">Nenhuma vaga encontrada</p>
+      <p class="empty-sub">Use "Buscar Vagas" para coletar vagas da web<br>ou ajuste os filtros acima</p>
+    </div>
+    <div class="feed-list" id="feedList"></div>
+  </section>
+
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-placeholder" id="detailPlaceholder">
+      <div class="placeholder-icon">←</div>
+      <p>Selecione uma vaga<br>para ver os detalhes</p>
+      <div class="shortcuts-hint">
+        <kbd>J</kbd><kbd>K</kbd> navegar &nbsp;·&nbsp; <kbd>Enter</kbd> abrir &nbsp;·&nbsp; <kbd>Esc</kbd> fechar
+      </div>
+    </div>
+    <div class="detail-content" id="detailContent" style="display:none"></div>
+  </aside>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════ CV LAYOUT ══ -->
+<main class="cv-layout" id="cvLayout" style="display:none">
+
+  <!-- Left panel -->
+  <div class="cv-panel">
+
+    <div class="cv-section-title">Arquivo</div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="uploadZone"
+         ondragover="event.preventDefault(); this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none"
+             onchange="handleFileSelect(this)">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="upload-title" id="uploadTitle">Soltar .pdf ou .docx aqui</p>
+      <p class="upload-sub">ou <button class="upload-link" onclick="$('fileInput').click()">escolher arquivo</button></p>
+    </div>
+
+    <div class="cv-section-title" style="margin-top:16px">Tema</div>
+
+    <!-- Theme selector -->
+    <div class="theme-grid" id="themeGrid">
+      <button class="theme-btn active" data-tema="classic">
+        <span class="theme-icon">📄</span>
+        <span class="theme-name">Clássico</span>
+        <span class="theme-engine">rendercv</span>
+      </button>
+      <button class="theme-btn" data-tema="engineeringresumes">
+        <span class="theme-icon">⚙️</span>
+        <span class="theme-name">Engenharia</span>
+        <span class="theme-engine">rendercv</span>
+      </button>
+      <button class="theme-btn" data-tema="executivo_azul">
+        <span class="theme-icon">🔷</span>
+        <span class="theme-name">Executivo</span>
+        <span class="theme-engine">HTML</span>
+      </button>
+      <button class="theme-btn" data-tema="elegante_br">
+        <span class="theme-icon">✨</span>
+        <span class="theme-name">Elegante</span>
+        <span class="theme-engine">HTML</span>
+      </button>
+      <button class="theme-btn" data-tema="compacto_academico">
+        <span class="theme-icon">🎓</span>
+        <span class="theme-name">Acadêmico</span>
+        <span class="theme-engine">HTML</span>
+      </button>
+      <button class="theme-btn" data-tema="moderno_conectado">
+        <span class="theme-icon">🌐</span>
+        <span class="theme-name">Moderno</span>
+        <span class="theme-engine">HTML</span>
+      </button>
+    </div>
+
+    <!-- Actions -->
+    <div class="cv-actions">
+      <button class="cv-btn primary" id="btnExtrair" onclick="extrairYAML()" disabled>
+        <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+          <path d="M10 3v10M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Extrair YAML
+      </button>
+      <button class="cv-btn success" id="btnGerar" onclick="gerarPDF()" disabled>
+        <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+          <path d="M4 16s1-1 4-1 5 2 8 2v-13s-3 0-5-2c-2 2-5 2-7 2v12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        Gerar PDF
+      </button>
+    </div>
+
+    <!-- Status log -->
+    <div class="cv-log" id="cvLog"></div>
+
+  </div>
+
+  <!-- YAML Editor -->
+  <div class="cv-editor-wrap">
+    <div class="editor-header">
+      <span class="editor-label">curriculum.yaml</span>
+      <div class="editor-actions">
+        <button class="editor-action-btn ai-fix-btn" id="btnNormalizarIA" onclick="normalizarYAMLcomIA()" title="Corrigir estrutura YAML com Gemini IA">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5z" stroke-linejoin="round"/>
+          </svg>
+          Corrigir com IA
+        </button>
+        <button class="editor-action-btn" onclick="clearEditor()" title="Limpar editor">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 3l10 10M13 3L3 13" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="editor-action-btn" onclick="copyYAML()" title="Copiar YAML">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="5" width="9" height="9" rx="1"/><path d="M11 5V3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <textarea id="yamlEditor" class="yaml-editor" spellcheck="false"
+              placeholder="Cole ou edite o YAML do seu currículo aqui.
+
+# ── ESTRUTURA MÍNIMA NECESSÁRIA ──────────────────────────
+cv:
+  name: Seu Nome Completo
+  email: seu@email.com
+  phone: '+55 11 99999-9999'
+  location: Cidade/UF — Brasil
+  social_networks:
+    - network: LinkedIn
+      username: seu-perfil
+
+  sections:
+
+    Resumo:
+      - Breve descrição profissional aqui.
+
+    Experiência:
+      - company: Empresa ABC
+        position: Cargo Aqui
+        date: Jan 2022 – presente
+        highlights:
+          - Responsabilidade ou conquista principal
+          - Outra realização relevante
+
+    Formação:
+      - institution: Universidade XYZ
+        area: Ciência de Dados
+        degree: Tecnólogo
+        date: 2023 – 2025
+
+    Habilidades:
+      - label: Linguagens
+        details: Python, SQL, JavaScript
+      - label: Ferramentas
+        details: Power BI, Git, Docker
+
+# DICA: Faça upload de um .pdf ou .docx para gerar automaticamente."></textarea>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════ BUSCAR MODAL ══ -->
+<div class="modal-overlay" id="buscarOverlay" onclick="closeBuscarModal(event)">
+  <div class="modal" id="buscarModal">
+    <div class="modal-header">
+      <span class="modal-title">Buscar Vagas na Web</span>
+      <button class="modal-close" onclick="closeBuscarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Cargo</label>
+        <input type="text" id="inputCargo" placeholder="ex: Analista de Dados, Dev Python…"
+               class="form-input" onkeydown="if(event.key==='Enter') iniciarBusca()">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Estado</label>
+          <select id="selEstadoBusca" class="form-input">
+            <option value="">Todos</option>
+            <option value="SP">São Paulo</option><option value="RJ">Rio de Janeiro</option>
+            <option value="MG">Minas Gerais</option><option value="RS">Rio Grande do Sul</option>
+            <option value="PR">Paraná</option><option value="SC">Santa Catarina</option>
+            <option value="BA">Bahia</option><option value="PE">Pernambuco</option>
+            <option value="CE">Ceará</option><option value="GO">Goiás</option>
+            <option value="DF">Distrito Federal</option><option value="Remoto">Remoto</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Fonte</label>
+          <select id="selFonteBusca" class="form-input">
+            <option value="">Todas</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="vagas.com">Vagas.com</option>
+            <option value="infojobs">InfoJobs</option>
+          </select>
+        </div>
+      </div>
+      <div class="scraping-log" id="scrapingLog" style="display:none">
+        <div class="log-header">
+          <span class="spinner"></span>
+          <span id="logTitle">Iniciando…</span>
+        </div>
+        <div class="log-entries" id="logEntries"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeBuscarModal()">Cancelar</button>
+      <button class="btn-primary" id="btnIniciarBusca" onclick="iniciarBusca()">
+        <span>Buscar</span>
+        <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+          <path d="M3 10h14M10 3l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ AI CONFIG MODAL ══ -->
+<div class="modal-overlay" id="aiConfigOverlay" onclick="closeAIConfig(event)">
+  <div class="modal" id="aiConfigModal">
+    <div class="modal-header">
+      <span class="modal-title">✦ Configurar Gemini AI</span>
+      <button class="modal-close" onclick="closeAIConfig()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text-2);line-height:1.7;margin-bottom:12px">
+        Use o <strong>Gemini 1.5 Flash</strong> (plano gratuito) para filtrar apenas vagas relevantes ao cargo buscado.<br>
+        Obtenha sua chave em <strong>aistudio.google.com</strong> → "Get API Key".
+      </div>
+      <div class="form-field">
+        <label>API Key do Gemini</label>
+        <input type="password" id="inputGeminiKey" placeholder="AIzaSy..." class="form-input">
+      </div>
+      <div id="aiTestResult" style="font-size:12px;margin-top:8px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="btnTestarAI" onclick="testarChaveAI()">Testar conexão</button>
+      <button class="btn-primary" onclick="salvarChaveAI()">
+        <span>Salvar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ SKILLS FAB ══ -->
+<button class="skills-fab" id="skillsFab" onclick="toggleSkillsPanel()" title="Minhas Skills">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+  </svg>
+</button>
+
+<div class="skills-panel" id="skillsPanel">
+  <div class="skills-header">
+    <span>Minhas Skills</span>
+    <button onclick="toggleSkillsPanel()">✕</button>
+  </div>
+  <div class="skills-input-row">
+    <input type="text" id="inputSkill" placeholder="Python, SQL, Excel…" class="skills-input"
+           onkeydown="if(event.key==='Enter') addSkill()">
+    <button class="btn-add-skill" onclick="addSkill()">+</button>
+  </div>
+  <div class="skills-chips" id="skillsChips"></div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

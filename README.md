@@ -1,165 +1,180 @@
 <div align="center">
 
-# ⚡ Job Aggregator
+# Job Aggregator
 
-**Agregador de vagas e gerador de currículo — tudo em um app desktop**
+**Plataforma web de busca inteligente de vagas com IA + gerador de curriculo profissional**
 
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-1f538d?style=flat-square)](https://github.com/TomSchimansky/CustomTkinter)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.1-000000?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Gemini](https://img.shields.io/badge/Gemini_2.0_Flash-AI-4285F4?style=flat-square&logo=google&logoColor=white)](https://aistudio.google.com/)
 [![SQLite](https://img.shields.io/badge/DB-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+
+*Projeto de portfolio — foco em automacao de recolocacao profissional na area fiscal, tributaria e contabil*
 
 </div>
 
 ---
 
-## Sobre o projeto
+## Sobre
 
-O **Job Aggregator** é um aplicativo desktop que centraliza a busca de vagas em múltiplos portais brasileiros e internacionais, com filtros inteligentes, rastreamento de candidaturas e geração de currículo em PDF — tudo sem abrir o navegador.
+O **Job Aggregator** e uma aplicacao web que agrega vagas de multiplas fontes simultaneamente, usa IA para filtrar apenas as oportunidades relevantes ao seu perfil e gera curriculos profissionais em PDF — tudo rodando localmente, sem pagar por servicos externos.
 
-Construído com Python puro e uma interface dark moderna via CustomTkinter.
+Construido com Flask no backend e JavaScript vanilla no frontend, com uma interface dark estilo [Linear](https://linear.app) e atualizacoes em tempo real via Server-Sent Events.
 
 ---
 
 ## Funcionalidades
 
-### ⚡ Aba de Vagas
+### Busca de Vagas com IA
 
-- **Busca multi-fonte simultânea** — LinkedIn, Vagas.com e InfoJobs em paralelo
-- **Filtros em tempo real** — cargo, estado, modalidade (remoto/híbrido/presencial), status
-- **Match score automático** — compara skills da vaga com seu perfil cadastrado (0–100%)
-- **Gestão de candidaturas** — marque vagas como favorita, aplicada, rejeitada etc.
-- **Sistema de feedback ML** — aprova/rejeita vagas para ajustar probabilidade de aprovação via fórmula Bayesiana
-- **Histórico e estatísticas** — painel com total de vagas, candidaturas e aprovações
+- **Multi-fonte simultanea** — LinkedIn, Vagas.com e InfoJobs em paralelo com progresso ao vivo
+- **Filtro Gemini AI** — cada vaga recebe score 0-10 de relevancia; vagas fora do perfil sao ocultadas automaticamente
+- **Filtros dinamicos** — cargo, estado, modalidade (remoto / hibrido / presencial), fonte e status de candidatura
+- **Match score** — compara automaticamente as skills da vaga com as do seu perfil cadastrado
+- **Gestao de candidaturas** — Nova / Favorita / Aplicada / Ignorada com persistencia no banco
 
-### 📄 Aba de Currículo
+### Machine Learning Local
 
-- **Upload de CV existente** — suporte a `.pdf` e `.docx`
-- **Parser inteligente** — extrai seções (experiência, formação, skills, contato) com heurística PT-BR
-- **6 temas disponíveis:**
+- Feedback manual ("Chamado!" / "Nao chamado") alimenta modelo probabilistico
+- Calcula `probabilidade de aprovacao` por titulo, fonte e modalidade
+- Atualiza todos os scores automaticamente apos cada feedback
+
+### Gerador de Curriculo
+
+- **Upload de CV** — suporte a `.pdf` e `.docx` com extracao automatica de texto
+- **Parser PT-BR** — detecta secoes (experiencia, formacao, skills, contato) via heuristica
+- **Correcao com IA** — botao envia YAML para o Gemini reformatar para a estrutura correta
+- **6 temas profissionais:**
 
 | Tema | Engine |
 |------|--------|
-| Clássico Profissional | rendercv |
-| Engenharia & Tecnologia | rendercv |
-| CV Moderno | rendercv |
-| Compacto Acadêmico | rendercv |
-| Executivo Azul ✦ | HTML+CSS |
-| Elegante Brasileiro ✦ | HTML+CSS |
-
-- **Exportação em PDF** via rendercv (Typst) ou browser headless (Edge/Chrome)
+| Executivo Azul | HTML + CSS + Chrome headless |
+| Elegante Brasileiro | HTML + CSS + Chrome headless |
+| Compacto Academico | HTML + CSS + Chrome headless |
+| Moderno Conectado | HTML + CSS + Chrome headless |
+| Classico Profissional | rendercv (Typst) |
+| Engenharia & Tecnologia | rendercv (Typst) |
 
 ---
 
-## Stack
+## Stack Tecnica
 
 | Camada | Tecnologia |
 |--------|-----------|
-| UI | CustomTkinter (dark theme) |
-| Scraping | requests + BeautifulSoup4 |
+| Backend | Python 3.11 + Flask 3.1 |
+| Frontend | HTML / CSS / JS vanilla — sem framework, sem build step |
 | Banco de dados | SQLite |
-| CV parsing | pdfplumber + python-docx |
-| CV geração | rendercv + HTML/CSS headless |
+| IA | Google Gemini 2.0 Flash (`google-genai` SDK v1.68+) |
+| Scraping | requests + BeautifulSoup4 + fake-useragent |
+| CV parsing | pdfplumber + python-docx + PyYAML |
+| CV render | rendercv (Typst) + Edge/Chrome headless |
+| Streaming | Server-Sent Events (SSE) — progresso em tempo real |
 
 ---
 
-## Instalação
+## Arquitetura
 
-### Pré-requisitos
+```
+POST /api/buscar
+  └── thread de fundo
+        ├── LinkedIn / Vagas.com / InfoJobs scrapers (paralelo)
+        ├── calcular_match_score() com perfil do usuario
+        ├── INSERT vagas — duplicatas ignoradas por UNIQUE(link)
+        └── Gemini pontua relevancia em lotes de 50
+             └── SSE broadcast ao cliente (progresso em tempo real)
 
-- Python 3.10+
-- Git
+app/
+├── database.py          # SQLite — vagas, feedbacks, perfil, historico
+├── ai/gemini.py         # Filtro de relevancia Gemini (score 0-10)
+├── scrapers/            # linkedin, vagas_com, infojobs
+├── cv/                  # extractor, parser, renderer, html_renderer
+└── utils/helpers.py     # match score, normalizacao de skills
 
-### Passos
+web/
+├── server.py            # Flask: 16 rotas REST + SSE
+├── templates/index.html # SPA shell
+└── static/              # style.css (design tokens) + app.js (SPA)
+```
+
+---
+
+## Como Executar
+
+**Requisitos:** Python 3.11+, Git
 
 ```bash
-# Clone o repositório
+# Clonar
 git clone https://github.com/CaetanoCOC/job-aggregator.git
 cd job-aggregator
 
-# Crie e ative o ambiente virtual
+# Criar e ativar venv
 python -m venv emprego
-emprego\Scripts\activate      # Windows
-# source emprego/bin/activate   # Linux/macOS
+emprego\Scripts\activate        # Windows
+# source emprego/bin/activate   # Linux / macOS
 
-# Instale as dependências
-pip install customtkinter requests beautifulsoup4 lxml fake-useragent python-dateutil
-pip install pdfplumber python-docx pyyaml
-pip install "rendercv[full]"
+# Instalar dependencias
+pip install flask google-genai requests beautifulsoup4 lxml fake-useragent \
+            pdfplumber python-docx pyyaml python-dateutil "rendercv[full]"
 
-# Execute
-python -m app.main
+# Iniciar servidor
+python web/server.py
+
+# Abrir no navegador
+# http://localhost:5007
 ```
+
+**Configurar Gemini AI (opcional — plano gratuito suficiente):**
+1. Obter chave em [aistudio.google.com](https://aistudio.google.com)
+2. Clicar no icone ⚙ na toolbar de vagas
+3. Colar a chave e clicar em **Salvar** — filtro IA sera habilitado
 
 ---
 
-## Estrutura do projeto
+## Design
+
+Interface baseada no design system do **Linear** — dark mode com accent indigo.
 
 ```
-job-aggregator/
-├── app/
-│   ├── main.py               # Entry point — JobAggregator(CTk)
-│   ├── database.py           # Toda a lógica SQLite (4 tabelas)
-│   ├── scrapers/
-│   │   ├── base_scraper.py   # ABC com _get(), _soup(), _vaga_padrao()
-│   │   ├── linkedin.py       # LinkedIn Guest API
-│   │   ├── vagas_com.py      # Vagas.com HTML scraping
-│   │   └── infojobs.py       # InfoJobs HTML scraping
-│   ├── ui/
-│   │   ├── shared.py         # Constantes de cor + listas globais
-│   │   ├── vagas_ui.py       # VagasTab — busca, filtros, feedback
-│   │   └── cv_ui.py          # CvTab — upload, parse, exportar PDF
-│   ├── cv/
-│   │   ├── extractor.py      # Extração de texto (.pdf / .docx)
-│   │   ├── parser.py         # Texto → dict estruturado → YAML
-│   │   ├── renderer.py       # Roteador rendercv / HTML
-│   │   └── html_renderer.py  # Templates HTML+CSS → PDF headless
-│   └── utils/
-│       └── helpers.py        # Match score, normalização de skills
-├── diagnostico.py            # Testa todos os scrapers isoladamente
-├── CLAUDE.md                 # Instruções para Claude Code
-└── README.md
+Fundo:      #08090a
+Surface:    #111213
+Accent:     #5e6ad2  (indigo)
+AI:         #c084fc  (roxo)
+
+Tipografia: Inter (corpo) · Space Grotesk (titulos) · JetBrains Mono (dados)
 ```
+
+Atualizacoes ao vivo via SSE sem polling — o frontend recebe eventos `progress`, `fonte_ok`, `ai_scoring`, `ai_done` e `done` durante o scraping.
 
 ---
 
-## Como funciona o scraping
+## API Routes
 
-```
-Usuário define: cargo + estado + site
-        ↓
-_iniciar_scraping() → thread background
-        ↓
-scraper.buscar(cargo, localização, skills)  ← cada fonte em paralelo
-        ↓
-inserir_vaga()  →  SQLite (UNIQUE em link, duplicatas ignoradas)
-        ↓
-_aplicar_filtros()  →  repopula tabela com filtros ativos
-```
-
----
-
-## Diagnóstico
-
-```bash
-# Testa todos os scrapers e exibe resultados
-python diagnostico.py
-
-# Testa um scraper isolado
-python -m app.scrapers.linkedin
-python -m app.scrapers.vagas_com
-```
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| GET | `/api/vagas` | Listar vagas com filtros |
+| PUT | `/api/vagas/<id>/status` | Atualizar status candidatura |
+| POST | `/api/vagas/<id>/feedback` | Feedback ML (chamado / nao chamado) |
+| GET | `/api/skills` | Skills do usuario |
+| POST | `/api/buscar` | Disparar scraping |
+| GET | `/api/buscar/stream` | SSE — progresso em tempo real |
+| GET | `/api/stats` | Estatisticas gerais |
+| POST | `/api/cv/extrair` | Upload .pdf/.docx → YAML |
+| POST | `/api/cv/normalizar-ia` | Corrigir YAML com Gemini |
+| POST | `/api/cv/gerar` | Gerar PDF do curriculo |
 
 ---
 
-## Contribuindo
+## Contexto
 
-Pull requests são bem-vindos. Para mudanças maiores, abra uma issue primeiro para discutir o que você gostaria de alterar.
+Desenvolvido para automatizar a busca de recolocacao profissional com foco em **cargos fiscais, tributarios e contabeis** no mercado brasileiro. A ferramenta roda inteiramente local — sem SaaS, sem assinatura — usando apenas a API gratuita do Gemini para o filtro inteligente.
 
 ---
 
 <div align="center">
 
-Feito com Python · CustomTkinter · SQLite
+**Caetano** — [github.com/CaetanoCOC](https://github.com/CaetanoCOC)
+
+Flask · Gemini AI · SQLite · Vanilla JS
 
 </div>
